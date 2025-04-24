@@ -47,3 +47,45 @@ def supabase_operation(operation, data=None, filters=None):
                 query = query.like(column, value)
 
     return query.execute()
+
+class ModerationResult(BaseModel):
+    is_offensive: bool
+    confidence_score: float
+    flagged_terms: list[str]
+
+class ModerationOutput(BaseModel):
+    content_id: str
+    content: str
+    status: str
+    is_offensive: bool
+    confidence_score: float
+    flagged_terms: List[str]
+    created_at: str
+    
+def moderate_text(content_id: str, content: str) -> dict:
+    offensive_terms = ["badword1", "badword2", "offensivephrase"]
+    flagged_terms = [
+        term
+        for term in offensive_terms
+        if re.search(r"\b" + re.escape(term) + r"\b", content, re.IGNORECASE)
+    ]
+    is_offensive = len(flagged_terms) > 0
+    confidence_score = 0.9 if is_offensive else 0.1  # Simplified confidence score
+
+    result = {
+        "content_id": content_id,
+        "content": content,
+        "status": "moderated",
+        "is_offensive": is_offensive,
+        "confidence_score": confidence_score,
+        "flagged_terms": flagged_terms,  # Keep as a list
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+    try:
+        supabase_operation("insert", data=result)
+        print(f"{Fore.GREEN}✅ Moderation result saved to database.{Style.RESET_ALL}")
+    except Exception as e:
+        print(f"{Fore.RED}❌ Error saving to database: {e}{Style.RESET_ALL}")
+
+    return result
