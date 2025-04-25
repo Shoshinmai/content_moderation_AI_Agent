@@ -89,3 +89,38 @@ def moderate_text(content_id: str, content: str) -> dict:
         print(f"{Fore.RED}❌ Error saving to database: {e}{Style.RESET_ALL}")
 
     return result
+
+def blocked_content(content_id: str) -> dict:
+    result ={
+        "content_id": content_id,
+        "status": "blocked",
+        "reason": "Content deemed too offensive"
+    }
+    
+    supabase_operation("insert", data=result)
+    return result
+
+def issue_warning(content_id: str) -> dict:
+    result = {
+        "content_id": content_id,
+        "status": "warning_issued",
+        "reason": "Content is borderline inappropriate.",
+    }
+
+    # Insert the warning record into the database
+    supabase_operation("insert", data=result)
+
+    return result
+
+def report_to_human(content_id: str, content: str) -> dict:
+    result = {
+        "content_id": content_id,
+        "status": "reported",
+        "content": content,
+        "reported_to": "human_moderator@example.com",
+    }
+
+    # Insert the report record into the database
+    supabase_operation("insert", data=result)
+
+    return result
